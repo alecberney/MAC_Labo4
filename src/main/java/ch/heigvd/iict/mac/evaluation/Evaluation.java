@@ -173,7 +173,8 @@ public class Evaluation {
         double meanAveragePrecision = 0.0;
         double fMeasure = 0.0;
 
-        //labIndex.index();
+        // average precision at the 11 recall levels (0,0.1,0.2,...,1) over all queries
+        double[] avgPrecisionAtRecallLevels = createZeroedRecalls();
 
         for (String query : queries) {
 
@@ -187,8 +188,10 @@ public class Evaluation {
             List<Integer> qrelResults = qrels.get(query);
 
             // Vérifie pour chaque document trouvé s'il est correct
+            // TODO: faire 2 indexes pour parcourir les 2 tableaux à un rythme différent
+            // Exemple : result = 0 3 5, juste = 0 2 3 5, depuis 3, ils seront tous refusé pour rien
             for(int i = 0; i < Math.max(qrelResults.size(), queryResult.size()); ++i) {
-                if (qrelResults.get(i) == queryResult.get(i)) {
+                if (Objects.equals(qrelResults.get(i), queryResult.get(i))) {
                     ++totalRetrievedRelevantDocsQuery;
                     avgPrecisionQuery += (double) totalRetrievedRelevantDocsQuery / (double) (i + 1);
                 }
@@ -197,19 +200,27 @@ public class Evaluation {
             avgPrecisionQuery /= qrelResults.size();
 
             // Ajout aux valeurs globales
+            // qrelResults.size() = Number of relevants documents
+            // queryResult.size() = Number of retrieved documents
             totalRelevantDocs += qrelResults.size();
             totalRetrievedDocs += queryResult.size();
             totalRetrievedRelevantDocs += totalRetrievedRelevantDocsQuery;
             avgPrecision += avgPrecisionQuery;
-            avgRecall += (double) totalRetrievedRelevantDocsQuery / (double) qrelResults.size();
+            avgRecall += ((double) totalRetrievedRelevantDocsQuery / (double) qrelResults.size());
+            // TODO
+            //avgRPrecision = ? RPrecisionQuery
+            //avgPrecisionAtRecallLevels[] = ? PrecisionAtRecallLevelsQuery[]
         }
 
         avgPrecision /= queryNumber;
+        meanAveragePrecision = avgPrecision;
         avgRecall /= queryNumber;
 
-        // average precision at the 11 recall levels (0,0.1,0.2,...,1) over all queries
-        double[] avgPrecisionAtRecallLevels = createZeroedRecalls();
+        // TODO: pas compris R-Precision
 
+        fMeasure = (2 * avgRecall * avgPrecision) / (avgRecall + avgPrecision);
+
+        // TODO: pas compris Average Interpolated Precision at Standard Recall Levels
 
         ///
         ///  Part IV - Display the metrics
