@@ -1,6 +1,10 @@
 package ch.heigvd.iict.mac.evaluation;
 
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -114,10 +118,11 @@ public class Evaluation {
         ///
         // TODO student: replace the null values with the correct analyzers
         var analyzers = List.of(
-              new NamedAnalyzer("Standard", null),
-              new NamedAnalyzer("Whitespace", null),
-              new NamedAnalyzer("English", null),
-              new NamedAnalyzer("English with custom stopwords", null)
+              new NamedAnalyzer("Standard", new StandardAnalyzer()),
+              new NamedAnalyzer("Whitespace", new WhitespaceAnalyzer()),
+              new NamedAnalyzer("English", new EnglishAnalyzer()),
+              new NamedAnalyzer("English with custom stopwords",
+                      new EnglishAnalyzer(new CharArraySet(commonWords, true)))
         );
 
         for(NamedAnalyzer na : analyzers) {
