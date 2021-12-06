@@ -187,13 +187,25 @@ public class Evaluation {
             // Récupère les documents attendus
             List<Integer> qrelResults = qrels.get(query);
 
+            // TODO: demander si les tableaux sont déjà trier par ID croissant
+            Collections.sort(queryResult);
+            Collections.sort(qrelResults);
+
             // Vérifie pour chaque document trouvé s'il est correct
             // TODO: faire 2 indexes pour parcourir les 2 tableaux à un rythme différent
             // Exemple : result = 0 3 5, juste = 0 2 3 5, depuis 3, ils seront tous refusé pour rien
-            for(int i = 0; i < Math.max(qrelResults.size(), queryResult.size()); ++i) {
+            int i = 0;
+            int j = 0;
+            while (i < Math.min(qrelResults.size(), queryResult.size())) {
                 if (Objects.equals(qrelResults.get(i), queryResult.get(i))) {
                     ++totalRetrievedRelevantDocsQuery;
                     avgPrecisionQuery += (double) totalRetrievedRelevantDocsQuery / (double) (i + 1);
+                    i++;
+                    j++;
+                } else if (queryResult.get(i) < qrelResults.get(j)) {
+                    i++;
+                } else {
+                    j++;
                 }
             }
 
