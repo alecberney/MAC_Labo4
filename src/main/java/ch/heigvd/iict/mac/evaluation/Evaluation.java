@@ -163,7 +163,7 @@ public class Evaluation {
         //    returned matching a query
         //         List<Integer> qrelResults = qrels.get(queryNumber);
 
-        int queryNumber = 0;
+        int queryNumber = queries.size();
         int totalRelevantDocs = 0;
         int totalRetrievedDocs = 0;
         int totalRetrievedRelevantDocs = 0;
@@ -172,6 +172,40 @@ public class Evaluation {
         double avgRecall = 0.0;
         double meanAveragePrecision = 0.0;
         double fMeasure = 0.0;
+
+        //labIndex.index();
+
+        for (String query : queries) {
+
+            int totalRetrievedRelevantDocsQuery = 0;
+            double avgPrecisionQuery = 0.0;
+
+            // Récupère les documents touchés par la requête
+            List<Integer> queryResult = labIndex.search(query);
+
+            // Récupère les documents attendus
+            List<Integer> qrelResults = qrels.get(query);
+
+            // Vérifie pour chaque document trouvé s'il est correct
+            for(int i = 0; i < Math.max(qrelResults.size(), queryResult.size()); ++i) {
+                if (qrelResults.get(i) == queryResult.get(i)) {
+                    ++totalRetrievedRelevantDocsQuery;
+                    avgPrecisionQuery += (double) totalRetrievedRelevantDocsQuery / (double) (i + 1);
+                }
+            }
+
+            avgPrecisionQuery /= qrelResults.size();
+
+            // Ajout aux valeurs globales
+            totalRelevantDocs += qrelResults.size();
+            totalRetrievedDocs += queryResult.size();
+            totalRetrievedRelevantDocs += totalRetrievedRelevantDocsQuery;
+            avgPrecision += avgPrecisionQuery;
+            avgRecall += (double) totalRetrievedRelevantDocsQuery / (double) qrelResults.size();
+        }
+
+        avgPrecision /= queryNumber;
+        avgRecall /= queryNumber;
 
         // average precision at the 11 recall levels (0,0.1,0.2,...,1) over all queries
         double[] avgPrecisionAtRecallLevels = createZeroedRecalls();
