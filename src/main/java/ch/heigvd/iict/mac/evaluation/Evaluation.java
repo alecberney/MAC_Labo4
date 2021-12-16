@@ -5,7 +5,6 @@ import org.apache.lucene.analysis.CharArraySet;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -173,48 +172,63 @@ public class Evaluation {
         double meanAveragePrecision = 0.0;
         double fMeasure = 0.0;
 
-        // average precision at the 11 recall levels (0,0.1,0.2,...,1) over all queries
+        // Average precision at the 11 recall levels (0,0.1,0.2,...,1) over all queries
         double[] avgPrecisionAtRecallLevels = createZeroedRecalls();
 
-        for (String query : queries) {
+        for (int i = 0; i < queries.size(); ++i) {
 
             int totalRetrievedRelevantDocsQuery = 0;
             double avgPrecisionQuery = 0.0;
+            double actualPrecision = 0.0;
 
             // Récupère les documents touchés par la requête
-            List<Integer> queryResult = labIndex.search(query);
+            List<Integer> queryResult = labIndex.search(queries.get(i));
 
             // Récupère les documents attendus
-            List<Integer> qrelResults = qrels.get(query);
+            List<Integer> qrelResults = qrels.get(i+1);
 
-            // Vérifie pour chaque document trouvé s'il est correct
-            for (int i = 0; i < queryResult.size(); ++i) {
-                if (qrelResults.contains(queryResult.get(i))) {
-                    ++totalRetrievedRelevantDocsQuery;
-                    avgPrecisionQuery += (double) totalRetrievedRelevantDocsQuery / (double) (i + 1);
+            if (qrelResults != null) {
+                // Vérifie pour chaque document trouvé s'il est correct
+                for (int j = 0; j < queryResult.size(); ++j) {
+                    actualPrecision = getActualPrecision(totalRetrievedRelevantDocsQuery, j + 1);
+
+                    if (qrelResults.contains(queryResult.get(j))) {
+                        ++totalRetrievedRelevantDocsQuery;
+                        avgPrecisionQuery += actualPrecision;
+                    }
+
+                    // Ajoute la Ranking Precision
+                    if (j == qrelResults.size() - 1) {
+                        avgRPrecision += actualPrecision;
+                    }
+
+                    fillPrecisionAtRecallLevels(getActualRecall(totalRetrievedRelevantDocsQuery, qrelResults.size()),
+                            actualPrecision,
+                            avgPrecisionAtRecallLevels);
                 }
-            }
 
-            avgPrecisionQuery /= qrelResults.size();
+                avgPrecisionQuery /= qrelResults.size();
+            }
 
             // Ajout aux valeurs globales
             // qrelResults.size() = Number of relevants documents
             // queryResult.size() = Number of retrieved documents
-            totalRelevantDocs += qrelResults.size();
+            totalRelevantDocs += qrelResults != null ? qrelResults.size() : 0;
             totalRetrievedDocs += queryResult.size();
             totalRetrievedRelevantDocs += totalRetrievedRelevantDocsQuery;
             avgPrecision += avgPrecisionQuery;
-            avgRecall += ((double) totalRetrievedRelevantDocsQuery / (double) qrelResults.size());
-            // TODO
-            //avgRPrecision = ? RPrecisionQuery
-            //avgPrecisionAtRecallLevels[] = ? PrecisionAtRecallLevelsQuery[]
+            avgRecall += qrelResults != null ? getActualRecall(totalRetrievedRelevantDocsQuery, qrelResults.size()) : 0;
         }
 
-        avgPrecision /= queryNumber;
+        avgPrecision /= queryNumber; // TODO demander à l'assistant
         meanAveragePrecision = avgPrecision;
         avgRecall /= queryNumber;
+        avgRPrecision /= queryNumber;
 
-        // TODO: pas compris R-Precision
+        // Calcul la moyenne pour chaque level
+        for (int i = 0; i < avgPrecisionAtRecallLevels.length; ++i) {
+            avgPrecisionAtRecallLevels[i] /= queryNumber;
+        }
 
         fMeasure = (2 * avgRecall * avgPrecision) / (avgRecall + avgPrecision);
 
@@ -230,6 +244,24 @@ public class Evaluation {
                 totalRetrievedRelevantDocs, avgPrecision, avgRecall, fMeasure,
                 meanAveragePrecision, avgRPrecision,
                 avgPrecisionAtRecallLevels);
+    }
+
+    private static double getActualRecall(double actualRetrievedRelevantDocsQuery, double NumberOfRelevantsDocuments) {
+        return actualRetrievedRelevantDocsQuery / NumberOfRelevantsDocuments;
+    }
+
+    private static double getActualPrecision(double actualRetrievedRelevantDocsQuery, double actualNumberOfDocuments) {
+        return actualRetrievedRelevantDocsQuery / actualNumberOfDocuments;
+    }
+
+    private static void fillPrecisionAtRecallLevels(double actualRecall,
+                                                    double actualPrecision,
+                                                    double[] avgPrecisionAtRecallLevels) {
+        for(int i = 0; i < avgPrecisionAtRecallLevels.length; ++i) {
+            if (actualRecall * 10 >= i && avgPrecisionAtRecallLevels[i] == 0.0) {
+                avgPrecisionAtRecallLevels[i] += actualPrecision;
+            }
+        }
     }
 
     private static void displayMetrics(
