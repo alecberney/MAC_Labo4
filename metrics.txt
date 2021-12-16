@@ -1,0 +1,95 @@
+Number of queries: 64
+Number of qrels: 52
+Average number of relevant docs per query: 15.307692307692308
+
+=== Using analyzer: Standard
+Number of indexed documents: 3202
+Number of retrieved documents: 128566
+Number of relevant documents: 796
+Number of relevant documents retrieved: 735
+Average precision: 0.0071428309691454585
+Average recall: 0.7602723756456631
+F-measure: 0.014152696018892887
+MAP: 0.05849830807081446
+Average R-Precision: 0.11915369085634657
+Average precision at recall levels:
+	0: 0.0
+	1: 0.1057780949438495
+	2: 0.1008637459096406
+	3: 0.09669352606709042
+	4: 0.0844867415906721
+	5: 0.06240768237001236
+	6: 0.05037531067100154
+	7: 0.03815061967949258
+	8: 0.028363872959789753
+	9: 0.012935958232238781
+	10: 0.008442315022701588
+
+=== Using analyzer: Whitespace
+Number of indexed documents: 3202
+Number of retrieved documents: 121529
+Number of relevant documents: 796
+Number of relevant documents retrieved: 680
+Average precision: 0.008420165913533697
+Average recall: 0.7112622536671098
+F-measure: 0.016643302715107854
+MAP: 0.03970912472493665
+Average R-Precision: 0.10578868415483941
+Average precision at recall levels:
+	0: 0.0
+	1: 0.09219829701504445
+	2: 0.07478846414447393
+	3: 0.06619011750060175
+	4: 0.05662527064595361
+	5: 0.04859066837562755
+	6: 0.02998573347338219
+	7: 0.018321672651462804
+	8: 0.011914323590977213
+	9: 0.0073362314548565555
+	10: 0.004959298655834842
+
+=== Using analyzer: English
+Number of indexed documents: 3202
+Number of retrieved documents: 82670
+Number of relevant documents: 796
+Number of relevant documents retrieved: 720
+Average precision: 0.009287046897482961
+Average recall: 0.7383922330678326
+F-measure: 0.01834338193123727
+MAP: 0.0916958084776928
+Average R-Precision: 0.15658966228329188
+Average precision at recall levels:
+	0: 0.0
+	1: 0.1505827107438152
+	2: 0.15500219955967567
+	3: 0.14593010107303178
+	4: 0.1262870152943768
+	5: 0.10337453153107928
+	6: 0.09134613506100818
+	7: 0.07034360595655614
+	8: 0.05213554019791284
+	9: 0.026732992253716135
+	10: 0.017996160483769112
+
+=== Using analyzer: English with custom stopwords
+Number of indexed documents: 3202
+Number of retrieved documents: 74544
+Number of relevant documents: 796
+Number of relevant documents retrieved: 717
+Average precision: 0.010155105742745661
+Average recall: 0.7356950604487851
+F-measure: 0.02003367826924782
+MAP: 0.10139686247592865
+Average R-Precision: 0.17066082229950805
+Average precision at recall levels:
+	0: 0.0
+	1: 0.16500475032184583
+	2: 0.15419425933596478
+	3: 0.16364207801727576
+	4: 0.13814472020046994
+	5: 0.1139288856146995
+	6: 0.10320330808878145
+	7: 0.07853803054252145
+	8: 0.06080585623604274
+	9: 0.03163015959706795
+	10: 0.020815022358227842

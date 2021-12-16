@@ -178,8 +178,9 @@ public class Evaluation {
         for (int i = 0; i < queries.size(); ++i) {
 
             int totalRetrievedRelevantDocsQuery = 0;
-            double avgPrecisionQuery = 0.0;
-            double actualPrecision = 0.0;
+            int lastPosition = 0;
+            double avgMeanPrecisionQuery = 0.0;
+            double actualPrecisionQuery = 0.0;
 
             // Récupère les documents touchés par la requête
             List<Integer> queryResult = labIndex.search(queries.get(i));
@@ -190,24 +191,26 @@ public class Evaluation {
             if (qrelResults != null) {
                 // Vérifie pour chaque document trouvé s'il est correct
                 for (int j = 0; j < queryResult.size(); ++j) {
-                    actualPrecision = getActualPrecision(totalRetrievedRelevantDocsQuery, j + 1);
+                    actualPrecisionQuery = getActualPrecision(totalRetrievedRelevantDocsQuery, j + 1);
 
                     if (qrelResults.contains(queryResult.get(j))) {
                         ++totalRetrievedRelevantDocsQuery;
-                        avgPrecisionQuery += actualPrecision;
+                        avgMeanPrecisionQuery += actualPrecisionQuery;
+
+                        lastPosition = fillPrecisionAtRecallLevels(
+                                getActualRecall(totalRetrievedRelevantDocsQuery, qrelResults.size()),
+                                actualPrecisionQuery,
+                                avgPrecisionAtRecallLevels,
+                                lastPosition);
                     }
 
                     // Ajoute la Ranking Precision
-                    if (j == qrelResults.size() - 1) {
-                        avgRPrecision += actualPrecision;
+                    if (j == qrelResults.size()-1) {
+                        avgRPrecision += actualPrecisionQuery;
                     }
-
-                    fillPrecisionAtRecallLevels(getActualRecall(totalRetrievedRelevantDocsQuery, qrelResults.size()),
-                            actualPrecision,
-                            avgPrecisionAtRecallLevels);
                 }
 
-                avgPrecisionQuery /= qrelResults.size();
+                avgMeanPrecisionQuery /= qrelResults.size();
             }
 
             // Ajout aux valeurs globales
@@ -216,12 +219,13 @@ public class Evaluation {
             totalRelevantDocs += qrelResults != null ? qrelResults.size() : 0;
             totalRetrievedDocs += queryResult.size();
             totalRetrievedRelevantDocs += totalRetrievedRelevantDocsQuery;
-            avgPrecision += avgPrecisionQuery;
+            avgPrecision += getActualPrecision(totalRetrievedRelevantDocsQuery, queryResult.size());
+            meanAveragePrecision += avgMeanPrecisionQuery;
             avgRecall += qrelResults != null ? getActualRecall(totalRetrievedRelevantDocsQuery, qrelResults.size()) : 0;
         }
 
-        avgPrecision /= queryNumber; // TODO demander à l'assistant
-        meanAveragePrecision = avgPrecision;
+        avgPrecision /= queryNumber;
+        meanAveragePrecision /= queryNumber;
         avgRecall /= queryNumber;
         avgRPrecision /= queryNumber;
 
@@ -231,8 +235,6 @@ public class Evaluation {
         }
 
         fMeasure = (2 * avgRecall * avgPrecision) / (avgRecall + avgPrecision);
-
-        // TODO: pas compris Average Interpolated Precision at Standard Recall Levels
 
         ///
         ///  Part IV - Display the metrics
@@ -254,14 +256,18 @@ public class Evaluation {
         return actualRetrievedRelevantDocsQuery / actualNumberOfDocuments;
     }
 
-    private static void fillPrecisionAtRecallLevels(double actualRecall,
-                                                    double actualPrecision,
-                                                    double[] avgPrecisionAtRecallLevels) {
-        for(int i = 0; i < avgPrecisionAtRecallLevels.length; ++i) {
-            if (actualRecall * 10 >= i && avgPrecisionAtRecallLevels[i] == 0.0) {
-                avgPrecisionAtRecallLevels[i] += actualPrecision;
+    private static int fillPrecisionAtRecallLevels(double actualRecall,
+                                                   double actualPrecision,
+                                                   double[] avgPrecisionAtRecallLevels,
+                                                   int pos) {
+        for(; pos < avgPrecisionAtRecallLevels.length; ++pos) {
+            if (actualRecall * 10 >= pos) {
+                avgPrecisionAtRecallLevels[pos] += actualPrecision;
+            } else {
+                return pos;
             }
         }
+        return pos;
     }
 
     private static void displayMetrics(
